@@ -7,7 +7,15 @@ import pandas_gbq
 pd.set_option('display.max_columns', None)
 
 MODO_OUTPUT = ['w', 'a']
-SISTEMAS = ['cantareira', 'alto_tiete', 'guarapiranga', 'cotia', 'rio_grande', 'rio_claro']
+SISTEMAS = {
+'cantareira': 0,
+'alto_tiete': 1,
+'guarapiranga': 2,
+'cotia': 3,
+'rio_grande': 4,
+'rio_claro': 5,
+'sao_lourenco': 17
+}
 ID_PROJETO_GCP = 'sabesp-dados'
 
 data_inicio = sys.argv[1] 
@@ -22,29 +30,14 @@ include_header = False if modo_output == 'a' else True
 
 print(f'Iniciando raspagem de {data_inicio} a {data_fim} no modo {modo_output} no diretório {dir_output}')
 
-for n_sis in range(len(SISTEMAS)):
-	url_api = f'https://mananciais.sabesp.com.br/api/Mananciais/RepresasSistemasNivel/{data_inicio}/{data_fim}/{n_sis}'
+for sistema in SISTEMAS:
+	url_api = f'https://mananciais.sabesp.com.br/api/Mananciais/RepresasSistemasNivel/{data_inicio}/{data_fim}/{SISTEMAS[sistema]}'
 	req = requests.get(url_api, verify=False)
 	dados_json = None
 	
 	if req.status_code == 200:
-		print(f'API da SABESP para o sistema {SISTEMAS[n_sis]} acessada com sucesso')
+		print(f'API da SABESP para o sistema {sistema} acessada com sucesso')
 		dados_json = json.loads(req.text)
-		objs_sistema = dados_json['ReturnObj']['ListaDadosSistema']
-		
-		df_sistema = pd.DataFrame(data={'Data': [], 'Volume (hm³)': [], 'Volume (%)': [], 'Chuva (mm)': [], 'Vazão natural (m³/s)': [], 'Vazão a jusante (m³/s)': []})
-		
-		for obj in objs_sistema:
-			dados = obj['objSistema']
-			data = dados['Data'].split('T')[0]
-			df_sistema.loc[len(df_sistema)] = [data, dados['VolumeOperacionalHm3'], dados['VolumePorcentagem'], dados['Precipitacao'], dados['VazaoNatural'], dados['VazaoJusante']]
-		
-		print(f'Dados do sistema {SISTEMAS[n_sis]} obtidos com sucesso')
-		path = f'{dir_output}/{SISTEMAS[n_sis]}.csv'
-		df_sistema.to_csv(path, index=False, mode=modo_output, header=include_header)
-		print(f'Dados do sistema {SISTEMAS[n_sis]} salvos com sucesso em {path}')
-		#pandas_gbq.to_gbq(df_sistema, SISTEMAS[n_sis], project_id=ID_PROJETO_GCP, if_exists='append')
-		#print(f'Dados do sistema {SISTEMAS[n_sis]} salvos com sucesso no BigQuery, projeto de ID {ID_PROJETO_GCP}')
 		
 		objs_reserv = dados_json['ReturnObj']['ListaDados']
 		df_reserv = pd.DataFrame(data={'Data': [], 'Nível': [], 'Volume (hm³)': [], 'Volume (%)': [], 'Chuva (mm)': [], 'Vazão natural (m³/s)': [], 'Vazão a jusante (m³/s)': [], 'Reservatório': []})
@@ -59,13 +52,28 @@ for n_sis in range(len(SISTEMAS)):
 				data = dados['Data'].split('T')[0]
 				df_reserv.loc[len(df_reserv)] = [data, dados['Nivel'], dados['VolumeOperacional'], dados['VolumePorcentagem'], dados['Chuva'], v_natural, dados['QJusante'], dados['Nome']]
 		
-		print(f'Dados dos reservatórios do sistema {SISTEMAS[n_sis]} obtidos com sucesso')
-		path = f'{dir_output}/{SISTEMAS[n_sis]}_reservatorios.csv'
+		print(f'Dados dos reservatórios do sistema {sistema} obtidos com sucesso')
+		path = f'{dir_output}/{sistema}_reservatorios.csv'
 		df_reserv.to_csv(path, index=False, mode=modo_output, header=include_header)
-		print(f'Dados dos reservatórios do sistema {SISTEMAS[n_sis]} salvos com sucesso em {path}')
-		#pandas_gbq.to_gbq(df_reserv, SISTEMAS[n_sis] + '_reservatorios', project_id=ID_PROJETO_GCP, if_exists='append')
-		#print(f'Dados dos reservatórios do sistema {SISTEMAS[n_sis]} salvos com sucesso no BigQuery, projeto de ID {ID_PROJETO_GCP}')
+		print(f'Dados dos reservatórios do sistema {sistema} salvos com sucesso em {path}')
+		
+		objs_sistema = dados_json['ReturnObj']['ListaDadosSistema']
+		df_sistema = pd.DataFrame(data={'Data': [], 'Volume (hm³)': [], 'Volume (%)': [], 'Chuva (mm)': [], 'Vazão natural (m³/s)': [], 'Vazão a jusante (m³/s)': []})
+		
+		if objs_sistema:
+			for obj in objs_sistema:
+				dados = obj['objSistema']
+				data = dados['Data'].split('T')[0]
+				df_sistema.loc[len(df_sistema)] = [data, dados['VolumeOperacionalHm3'], dados['VolumePorcentagem'], dados['Precipitacao'], dados['VazaoNatural'], dados['VazaoJusante']]
+		else:
+			df_sistema = df_reserv.copy()
+			df_sistema.drop(['Nível'], axis=1, inplace=True)
+		
+		print(f'Dados do sistema {sistema} obtidos com sucesso')
+		path = f'{dir_output}/{sistema}.csv'
+		df_sistema.to_csv(path, index=False, mode=modo_output, header=include_header)
+		print(f'Dados do sistema {sistema} salvos com sucesso em {path}')
 	else:
-		print(f'Acesso à API da SABESP para o sistema {SISTEMAS[n_sis]} falhou com status {req.status_code}')
+		print(f'Acesso à API da SABESP para o sistema {sistema} falhou com status {req.status_code}')
 
 	print('---------------------------------------------------')
