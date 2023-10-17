@@ -1,0 +1,25 @@
+name: Atualização diária dos dados
+
+on:
+	schedule:
+		- cron: '5 9,10,15,20 * * *'
+
+jobs:
+	build:
+		runs-on: ubuntu-latest
+		steps:
+			- uses: actions/checkout@v3
+			
+			- name: Setup python
+				uses: actions/setup-python@v4
+				with:
+					python-version: '3.8.10'
+			
+			- name: Instalar pacotes do Python
+				run: pipenv install
+				
+			- name: Ativar ambiente pipenv
+				run: pipenv shell
+				
+			- name: Executar script
+				run: python scripts/runner.py
