@@ -8,6 +8,8 @@ pandas = "*"
 requests = "*"
 certifi = "*"
 pandas-gbq = "*"
+flask = "*"
+gunicorn = "*"
 
 [dev-packages]
 
