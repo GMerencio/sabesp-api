@@ -2,7 +2,6 @@ import sys
 import json
 import requests
 import pandas as pd
-import pandas_gbq
 
 pd.set_option('display.max_columns', None)
 
@@ -70,16 +69,3 @@ def raspar_sistemas(data_inicio, data_fim, modo_output, dir_output, sistemas_inp
 		else:
 			print(f'Acesso à API da SABESP para o sistema {sistema} falhou com status {req.status_code}')
 		print('---------------------------------------------------')
-
-data_inicio = sys.argv[1] 
-data_fim = sys.argv[2]
-modo_output = sys.argv[3].lower()
-dir_output = sys.argv[4]
-sistemas_input = sys.argv[5].split(',')
-
-if modo_output not in MODO_OUTPUT:
-	modo_output = 'a'
-if sistemas_input == ['todos']:
-	sistemas_input = SISTEMAS.keys()
-
-raspar_sistemas(data_inicio, data_fim, modo_output, dir_output, sistemas_input)
