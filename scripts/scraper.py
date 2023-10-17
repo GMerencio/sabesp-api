@@ -18,19 +18,6 @@ SISTEMAS = {
 }
 ID_PROJETO_GCP = 'sabesp-dados'
 
-data_inicio = sys.argv[1] 
-data_fim = sys.argv[2]
-modo_output = sys.argv[3].lower()
-dir_output = sys.argv[4]
-sistemas_input = sys.argv[5].split(',')
-
-if modo_output not in MODO_OUTPUT:
-	modo_output = 'a'
-if sistemas_input == ['todos']:
-	sistemas_input = SISTEMAS.keys()
-
-raspar_sistemas(data_inicio, data_fim, modo_output, dir_output, sistemas_input)
-
 def raspar_sistemas(data_inicio, data_fim, modo_output, dir_output, sistemas_input):
 	include_header = False if modo_output == 'a' else True
 	
@@ -74,6 +61,7 @@ def raspar_sistemas(data_inicio, data_fim, modo_output, dir_output, sistemas_inp
 			else:
 				df_sistema = df_reserv.copy()
 				df_sistema.drop(['Nível'], axis=1, inplace=True)
+				df_sistema.drop(['Reservatório'], axis=1, inplace=True)
 			
 			print(f'Dados do sistema {sistema} obtidos com sucesso')
 			path = f'{dir_output}/{sistema}.csv'
@@ -81,5 +69,17 @@ def raspar_sistemas(data_inicio, data_fim, modo_output, dir_output, sistemas_inp
 			print(f'Dados do sistema {sistema} salvos com sucesso em {path}')
 		else:
 			print(f'Acesso à API da SABESP para o sistema {sistema} falhou com status {req.status_code}')
-	
 		print('---------------------------------------------------')
+
+data_inicio = sys.argv[1] 
+data_fim = sys.argv[2]
+modo_output = sys.argv[3].lower()
+dir_output = sys.argv[4]
+sistemas_input = sys.argv[5].split(',')
+
+if modo_output not in MODO_OUTPUT:
+	modo_output = 'a'
+if sistemas_input == ['todos']:
+	sistemas_input = SISTEMAS.keys()
+
+raspar_sistemas(data_inicio, data_fim, modo_output, dir_output, sistemas_input)
