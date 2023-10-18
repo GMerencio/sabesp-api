@@ -2,18 +2,18 @@ name: Atualização diária dos dados
 
 on:
   schedule:
-    - cron: '5 2,12,13,18,23 * * *'
+    - cron: '5 3,12,13,18,23 * * *'
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v3
       
       - name: Setup Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.8'
+          python-version: '3.8.10'
 
       - name: Instalar dependências
         run: |
