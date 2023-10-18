@@ -1,8 +1,9 @@
 name: Atualização diária dos dados
 
 on:
+  workflow_dispatch:
   schedule:
-    - cron: '5 3,12,13,18,23 * * *'
+    - cron: '5 12,13,18,23 * * *'
 
 jobs:
   build:
@@ -24,4 +25,18 @@ jobs:
         run: pipenv install
         
       - name: Executar script
-        run: pipenv run python scripts/runner.py
+        run: pipenv run python runner.py
+        working-directory: ./scripts
+
+      - name: Commit de arquivos
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add -A
+          git diff-index --quiet HEAD || (git commit -a -m "Arquivos atualizados" --allow-empty)
+
+      - name: Push dos commits
+        uses: ad-m/github-push-action@v0.6.0
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: main 
